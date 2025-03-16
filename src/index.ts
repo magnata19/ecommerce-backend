@@ -2,6 +2,8 @@ import express, { Express, Request, Response } from 'express'
 import { PORT } from './secret';
 import { rootRouter } from './routes';
 import { PrismaClient } from '@prisma/client';
+import { errorMiddleware } from './middlewares/errors';
+import { SignUpSchema } from './schema/user-schema';
 
 const app: Express = express();
 
@@ -12,6 +14,7 @@ export const prismaClient = new PrismaClient({
   log: ['query']
 })
 
+app.use(errorMiddleware)
 app.listen(PORT, () => {
   console.log('working!')
 })
