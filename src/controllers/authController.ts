@@ -6,42 +6,40 @@ import * as jwt from 'jsonwebtoken';
 import { JWT_SECRET } from "../secret";
 import { BadRequestException } from "../exceptions/bad-request";
 import { ErrorCode } from "../exceptions/exception-root";
-import { UnprocessableEntity } from "../exceptions/unprocessable";
+import { UnprocessableEntity } from "../exceptions/unprocessable-entity";
 import { SignUpSchema } from "../schema/user-schema";
+import { NotFoundException } from "../exceptions/not-found";
+import { IncorrectPasswordException } from "../exceptions/incorrect-password";
 
 export class AuthController {
   static signUp = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      SignUpSchema.parse(req.body);
-      const { name, email, password } = req.body as User;
+    SignUpSchema.parse(req.body);
+    const { name, email, password } = req.body as User;
 
-      let user = await prismaClient.user.findFirst({ where: { email: email } });
+    let user = await prismaClient.user.findFirst({ where: { email: email } });
 
-      if (user) {
-        next(new BadRequestException('User already exists.', ErrorCode.USER_ALREADY_EXISTS));
-      }
-
-      user = await prismaClient.user.create({
-        data: {
-          name,
-          email,
-          password: hashSync(password, 10)
-        }
-      })
-      res.status(201).json(user)
-    } catch (err: any) {
-      next(new UnprocessableEntity('Unprocessable Entity!', ErrorCode.UNPROCESSABLE_ENTITY, err?.issues));
+    if (user) {
+      new BadRequestException('User already exists.', ErrorCode.USER_ALREADY_EXISTS);
     }
+
+    user = await prismaClient.user.create({
+      data: {
+        name,
+        email,
+        password: hashSync(password, 10)
+      }
+    })
+    res.status(201).json(user)
   }
 
-  static login = async (req: Request, res: Response) => {
+  static login = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body as User;
     let user = await prismaClient.user.findFirst({ where: { email: email } });
     if (!user) {
-      throw new Error("User not found!")
+      throw new NotFoundException("User not found!", ErrorCode.USER_NOT_FOUND);
     }
     if (!compareSync(password, user.password)) {
-      throw new Error("Incorrect password.")
+      throw new IncorrectPasswordException("Incorrect password.", ErrorCode.INCORRECT_PASSWORD)
     }
 
     const token = jwt.sign({
