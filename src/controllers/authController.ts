@@ -6,13 +6,13 @@ import * as jwt from 'jsonwebtoken';
 import { JWT_SECRET } from "../secret";
 import { BadRequestException } from "../exceptions/bad-request";
 import { ErrorCode } from "../exceptions/exception-root";
-import { UnprocessableEntity } from "../exceptions/unprocessable-entity";
 import { SignUpSchema } from "../schema/user-schema";
 import { NotFoundException } from "../exceptions/not-found";
 import { IncorrectPasswordException } from "../exceptions/incorrect-password";
+import { RequestCustom } from "../types";
 
 export class AuthController {
-  static signUp = async (req: Request, res: Response, next: NextFunction) => {
+  static signUp = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     SignUpSchema.parse(req.body);
     const { name, email, password } = req.body as User;
 
@@ -32,8 +32,8 @@ export class AuthController {
     res.status(201).json(user)
   }
 
-  static login = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body as User;
+  static login = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    const { email, password } = req.body
     let user = await prismaClient.user.findFirst({ where: { email: email } });
     if (!user) {
       throw new NotFoundException("User not found!", ErrorCode.USER_NOT_FOUND);
@@ -49,4 +49,7 @@ export class AuthController {
     res.status(200).json({ user, token });
   }
 
+  static getUserInformation = async (req: RequestCustom, res: Response, next: NextFunction): Promise<any> => {
+    res.json(req.user);
+  }
 }
