@@ -1,5 +1,5 @@
 import { Router, RequestHandler, ErrorRequestHandler } from "express";
-import { AuthController } from "../controllers/authController";
+import { AuthController } from "../controllers/auth-controller";
 import { ErrorHandler } from "../error-handler";
 import { authMiddleware } from "../middlewares/auth";
 
