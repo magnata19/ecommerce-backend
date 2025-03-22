@@ -19,7 +19,7 @@ export class AuthController {
     let user = await prismaClient.user.findFirst({ where: { email: email } });
 
     if (user) {
-      new BadRequestException('User already exists.', ErrorCode.USER_ALREADY_EXISTS);
+      new BadRequestException('User already exists.', ErrorCode.USER_ALREADY_EXISTS, null);
     }
 
     user = await prismaClient.user.create({
@@ -36,7 +36,7 @@ export class AuthController {
     const { email, password } = req.body
     let user = await prismaClient.user.findFirst({ where: { email: email } });
     if (!user) {
-      throw new NotFoundException("User not found!", ErrorCode.USER_NOT_FOUND);
+      throw new NotFoundException("User not found!", ErrorCode.USER_NOT_FOUND, null);
     }
     if (!compareSync(password, user.password)) {
       throw new IncorrectPasswordException("Incorrect password.", ErrorCode.INCORRECT_PASSWORD)
