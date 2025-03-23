@@ -24,10 +24,24 @@ export class UserController {
   }
 
   static deleteAddress = async (req: Request, res: Response, next: NextFunction) => {
-
+    try {
+      await prismaClient.address.delete({
+        where: { id: +req.params.id }
+      })
+      res.json({ message: "Address deleted!", success: true })
+    } catch (err) {
+      next(new NotFoundException("Address not found!", ErrorCode.ADDRESS_NOT_FOUND, err))
+    }
   }
 
-  static listAddress = async (req: Request, res: Response, next: NextFunction) => {
-
+  static listAddress = async (req: RequestCustom, res: Response, next: NextFunction) => {
+    try {
+      const adresses = await prismaClient.address.findMany({
+        where: { userId: req.user!.id }
+      })
+      res.json(adresses)
+    } catch (err) {
+      next(new NotFoundException("Addresses not found!", ErrorCode.ADDRESS_NOT_FOUND, err))
+    }
   }
 }
