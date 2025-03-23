@@ -30,6 +30,8 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
+  cart CartItems[]
+
   @@map("users")
 }
 
@@ -55,5 +57,18 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  cart CartItems[]
+
   @@map("products")
+}
+
+model CartItems {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User?    @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product? @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  @@map("cart_items")
 }
