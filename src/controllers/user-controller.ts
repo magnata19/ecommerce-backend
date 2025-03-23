@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { AddressSchema } from "../schema/user-schema";
+import { AddressSchema, UpdateUserSchema } from "../schema/user-schema";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/exception-root";
 import { prismaClient } from "..";
-import { User } from "@prisma/client";
+import { Address, User } from "@prisma/client";
 import { RequestCustom } from "../types";
 
 export class UserController {
@@ -43,5 +43,43 @@ export class UserController {
     } catch (err) {
       next(new NotFoundException("Addresses not found!", ErrorCode.ADDRESS_NOT_FOUND, err))
     }
+  }
+
+  static updateUser = async (req: RequestCustom, res: Response, next: NextFunction) => {
+    const validatedData = UpdateUserSchema.parse(req.body);
+    let shippingAdress: Address;
+    let billingAddress: Address;
+    if (validatedData.defaultShippingAddress) {
+      try {
+        shippingAdress = await prismaClient.address.findFirstOrThrow({
+          where: { id: validatedData.defaultShippingAddress }
+        })
+        if (shippingAdress.userId != req.user!.id) {
+          next(new NotFoundException("Address does not belong to User", ErrorCode.ADDRESS_NOT_FOUND, null))
+        }
+      } catch (err) {
+        next(new NotFoundException("Address not found!!", ErrorCode.ADDRESS_NOT_FOUND, err))
+      }
+    }
+
+    if (validatedData.defaultBillingAddress) {
+      try {
+        billingAddress = await prismaClient.address.findFirstOrThrow({
+          where: { id: validatedData.defaultBillingAddress }
+        })
+        if (billingAddress.userId !== req.user!.id) {
+          throw new NotFoundException("Address not found!", ErrorCode.ADDRESS_NOT_FOUND, null)
+        }
+      } catch (err) {
+        next(new NotFoundException("Addresses not found!", ErrorCode.ADDRESS_NOT_FOUND, err))
+      }
+    }
+
+    const updatedUser = await prismaClient.user.update({
+      where: { id: req.user!.id },
+      data: validatedData
+    })
+
+    res.json(updatedUser)
   }
 }
