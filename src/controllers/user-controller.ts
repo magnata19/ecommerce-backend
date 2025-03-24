@@ -5,6 +5,7 @@ import { ErrorCode } from "../exceptions/exception-root";
 import { prismaClient } from "..";
 import { Address, User } from "@prisma/client";
 import { RequestCustom } from "../types";
+import { BadRequestException } from "../exceptions/bad-request";
 
 export class UserController {
   static addAddress = async (req: RequestCustom, res: Response, next: NextFunction) => {
@@ -81,5 +82,45 @@ export class UserController {
     })
 
     res.json(updatedUser)
+  }
+
+  static listUsers = async (req: RequestCustom, res: Response, next: NextFunction) => {
+    const users = await prismaClient.user.findMany({
+      skip: +req.query.skip! || 0,
+      take: 5
+    })
+    res.json(users)
+  }
+
+  static getUserById = async (req: RequestCustom, res: Response, next: NextFunction) => {
+    try {
+      const users = await prismaClient.user.findFirstOrThrow({
+        where: {
+          id: +req.params.id
+        },
+        include: {
+          address: true
+        }
+      })
+      res.json(users)
+    } catch (err) {
+      next(new NotFoundException("Users not found!", ErrorCode.USER_NOT_FOUND, err))
+    }
+  }
+
+  static changeUserRole = async (req: RequestCustom, res: Response, next: NextFunction) => {
+    try {
+      let user = await prismaClient.user.update({
+        where: {
+          id: +req.params.id
+        },
+        data: {
+          role: req.body.role
+        }
+      })
+      res.json(user)
+    } catch (err) {
+      next(new BadRequestException("You don't have any permission to change the role", ErrorCode.UNAUTHORIZED, err))
+    }
   }
 }
