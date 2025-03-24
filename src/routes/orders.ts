@@ -7,5 +7,5 @@ export const orderRouter: Router = Router();
 
 orderRouter.post('/', [authMiddleware], ErrorHandler(OrdersController.createOrder))
 orderRouter.get('/', [authMiddleware], ErrorHandler(OrdersController.listOrders))
-orderRouter.delete('/:id/cancel', [authMiddleware], ErrorHandler(OrdersController.cancelOrder))
+orderRouter.put('/:id/cancel', [authMiddleware], ErrorHandler(OrdersController.cancelOrder))
 orderRouter.get("/:id", [authMiddleware], ErrorHandler(OrdersController.getOrderById))
